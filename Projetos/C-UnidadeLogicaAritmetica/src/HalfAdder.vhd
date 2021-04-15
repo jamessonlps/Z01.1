@@ -21,5 +21,8 @@ architecture rtl of HalfAdder is
 
 begin
   -- Implementação vem aqui!
+  -- para entender, faça a tabela verdade
+  soma <= a xor b;
+  vaium <= a and b;
 
 end architecture;
