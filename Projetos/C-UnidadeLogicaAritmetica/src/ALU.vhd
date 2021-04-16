@@ -28,16 +28,16 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 entity ALU is
 	port (
-			x,y:   in STD_LOGIC_VECTOR(15 downto 0); -- entradas de dados da ALU
-			zx:    in STD_LOGIC;                     -- zera a entrada x
-			nx:    in STD_LOGIC;                     -- inverte a entrada x
-			zy:    in STD_LOGIC;                     -- zera a entrada y
-			ny:    in STD_LOGIC;                     -- inverte a entrada y
-			f:     in STD_LOGIC;                     -- se 0 calcula x & y, senão x + y
-			no:    in STD_LOGIC;                     -- inverte o valor da saída
-			zr:    out STD_LOGIC;                    -- setado se saída igual a zero
-			ng:    out STD_LOGIC;                    -- setado se saída é negativa
-			saida: out STD_LOGIC_VECTOR(15 downto 0) -- saída de dados da ALU
+		x,y:   in STD_LOGIC_VECTOR(15 downto 0); -- entradas de dados da ALU
+		zx:    in STD_LOGIC;                     -- zera a entrada x
+		nx:    in STD_LOGIC;                     -- inverte a entrada x
+		zy:    in STD_LOGIC;                     -- zera a entrada y
+		ny:    in STD_LOGIC;                     -- inverte a entrada y
+		f:     in STD_LOGIC;                     -- se 0 calcula x & y, senão x + y
+		no:    in STD_LOGIC;                     -- inverte o valor da saída
+		zr:    out STD_LOGIC;                    -- setado se saída igual a zero
+		ng:    out STD_LOGIC;                    -- setado se saída é negativa
+		saida: out STD_LOGIC_VECTOR(15 downto 0) -- saída de dados da ALU
 	);
 end entity;
 
@@ -81,7 +81,7 @@ architecture  rtl OF alu is
 			a   : in STD_LOGIC_VECTOR(15 downto 0);
 			zr   : out STD_LOGIC;
 			ng   : out STD_LOGIC
-    );
+    	);
 	end component;
 
 	component Mux16 is
@@ -97,5 +97,70 @@ architecture  rtl OF alu is
 
 begin
   -- Implementação vem aqui!
+  zeraX: zerador16
+  port map (
+	z => zx,    -- zerador
+	a => x,     -- vetor de entrada
+	y => zxout  -- resultado (saída)
+  );
+
+  zeraY: zerador16
+  port map (
+	z => zy,
+	a => y,
+	y => zyout
+  );
+
+  inverteX: inversor16
+  port map (
+	a => zxout, -- conecta entrada do inversor à saida do zerador
+	z => nx,    -- negador
+	y => nxout  -- resultado (saída)
+  );
+
+  inverteY: inversor16
+  port map (
+	a => zyout,
+	z => ny,
+	y => nyout
+  );
+
+  and16Ula: And16
+  port map (
+	a => nxout, -- conecta com saída de nX
+	b => nyout, -- conecta com saída de nY
+	q => andout -- resultado
+  );
+
+  add16Ula: Add16
+  port map (
+	a => nyout,
+	b => nxout,
+	q => adderout
+  );
+
+  muxUla: mux16
+  port map (
+	a => andout   -- conecta com saída da and
+	b => adderout -- conecta com saída do adder
+	sel => f      -- conecta com o seletor
+	q => muxout   -- resultado (saída)
+  );
+
+  inverteUla: inversor16
+  port map (
+	z => no,     -- seletor
+	a => muxout  -- conecta entrada do inversor com saída do mux
+	y => precomp -- conecta com entrada do comparador
+  );
+
+  compUla: comparador16
+  port map (
+	a => precomp -- conecta com saída do inversor anterior
+	zr => zr     -- conecta controles zr
+	ng => ng     -- conecta controles ng
+  );
+
+  saida <= precomp; -- conecta saída da ula com o resultado final
 
 end architecture;
