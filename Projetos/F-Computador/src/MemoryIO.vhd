@@ -30,7 +30,7 @@ entity MemoryIO is
         SW  : in std_logic_vector(9 downto 0);
         LED : OUT std_logic_vector(9 downto 0)
 
-		);
+    );
 end entity;
 
 
@@ -92,17 +92,19 @@ ARCHITECTURE logic OF MemoryIO IS
   SIGNAL LOAD_LED         : STD_LOGIC := '0';
 
   SIGNAL OUTPUT_RAM       : STD_LOGIC_VECTOR(15 downto 0);
-	SIGNAL SW16 : STD_LOGIC_VECTOR(15 downto 0);
-	SIGNAL LED16 : STD_LOGIC_VECTOR(15 downto 0);
+  SIGNAL SW16 : STD_LOGIC_VECTOR(15 downto 0);
+  SIGNAL LED16 : STD_LOGIC_VECTOR(15 downto 0);
 
 BEGIN
 
   RAM: RAM16K
     PORT MAP(
+      -- entradas
       address => ADDRESS(13 downto 0),
       clock		=> CLK_FAST,
       data		=> INPUT,
       wren		=> LOAD_RAM,
+      -- saída
       q		    => OUTPUT_RAM
       );
 
@@ -130,14 +132,18 @@ BEGIN
         input => INPUT,
         load  => LOAD_LED,
         output => LED16
-        );
+      );
 
-    ----------------------------------------
+----------------------------------------
     -- Controla LOAD do display e da ram e LED ! --
     ----------------------------------------
-    --LOAD_DISPLAY <= ??????; 
-    --LOAD_RAM     <= ??????; 
-    --LOAD_LED     <= ??????; 
+    LOAD_DISPLAY <= LOAD when ADDRESS >= "1000000000000" and ADDRESS <= "101001010111111" else
+                    '0'; -- compreende faixa de valores que corresponde ao LCD
+    LOAD_RAM     <= LOAD when ADDRESS < "1000000000000" else 
+                    '0'; -- compreende do início até antes de começar o LCD
+    LOAD_LED     <= LOAD when ADDRESS = "101001011000000" else 
+                    '0'; -- compreende o único valor referente aos LEDs
+
 
     ----------------------------------------
     -- SW e LED                           --
@@ -153,7 +159,8 @@ BEGIN
     -- SAIDA do memory I/O                --
     ----------------------------------------
     -- precisar ser: RAM ou SW16
-    -- OUTPUT <= ?????? ;
+    OUTPUT <= SW16 when ADDRESS = "101001011000001" else -- vide mapa de memo. (saída SW)
+              OUTPUT_RAM;
 
 
 END logic;
